@@ -92,12 +92,20 @@ export class AppModule {}
 Módulos creados
 ------------------------------------------------------------
 
+**Módulos generados (estructura completa):**
 - auth → autenticación y autorización (JWT + bcrypt + Passport)
-- users → gestión de usuarios
+- users → gestión de usuarios ✅ **CONECTADO Y FUNCIONAL**
 - products → gestión de productos
 - orders → gestión de pedidos
 - cart → carrito de compras
 - chat → chat en tiempo real
+- payments → gestión de pagos
+
+**Estado actual:**
+- ✅ **Solo UsersModule está conectado en app.module.ts**
+- ✅ **Entidad User completamente implementada**
+- ❌ **Otros módulos están creados pero NO conectados**
+- ❌ **Servicios con código placeholder (no implementados)**
 
 Cada módulo incluye:
 
@@ -112,14 +120,18 @@ Scripts disponibles
 ------------------------------------------------------------
 
 "scripts": {
+  "build": "nest build",
+  "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
   "start": "nest start",
   "start:dev": "nest start --watch",
-  "build": "nest build",
+  "start:debug": "nest start --debug --watch",
+  "start:prod": "node dist/main",
   "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-  "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
   "test": "jest",
   "test:watch": "jest --watch",
-  "test:cov": "jest --coverage"
+  "test:cov": "jest --coverage",
+  "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+  "test:e2e": "jest --config ./test/jest-e2e.json"
 }
 
 - start:dev → levantar la app en modo watch
@@ -132,13 +144,16 @@ Estado actual del proyecto
 
 - [x] Proyecto creado con `nest new`
 - [x] Dependencias necesarias instaladas
-- [x] Módulos generados (auth, users, products, orders, cart, chat) con DTOs, entities y tests
+- [x] Módulos generados (auth, users, products, orders, cart, chat, payments) con DTOs, entities y tests
 - [x] Configuración de conexión a Neon (PostgreSQL) lista
 - [x] Variables de entorno definidas en .env
 - [x] **Entidad User completamente implementada** (campos básicos + dirección + roles)
 - [x] **Sistema de roles implementado** (user/admin por defecto)
 - [x] **Registro escalonado** (básico + perfil opcional)
 - [x] **Seguridad implementada** (password protegido, campos opcionales)
+- [x] **Solo UsersModule conectado en app.module.ts**
+- [ ] **Otros módulos NO conectados** (auth, products, orders, cart, chat, payments)
+- [ ] **Servicios con código placeholder** (no implementados realmente)
 - [ ] DTOs con validaciones (en progreso)
 - [ ] Servicios con lógica real de TypeORM (pendiente)
 - [ ] Sistema de autenticación JWT (pendiente)
