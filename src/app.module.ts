@@ -2,6 +2,12 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './modules/users/users.module';
+import { AuthModule } from './modules/auth/auth.module'; 
+import { ProductsModule } from './modules/products/products.module';
+import { OrdersModule } from './modules/orders/orders.module';
+import { CartModule } from './modules/cart/cart.module';
+import { ChatModule } from './modules/chat/chat.module';
+import { PaymentsModule } from './modules/payments/payments.module';
 
 
 @Module({
@@ -17,6 +23,12 @@ import { UsersModule } from './modules/users/users.module';
     logging: true,
   }),
   UsersModule,
+  AuthModule,
+  ProductsModule,
+  OrdersModule,
+  CartModule,
+  ChatModule,
+  PaymentsModule,
 ],
 
 })

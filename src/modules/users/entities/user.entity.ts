@@ -1,46 +1,53 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
+import { Role } from 'src/common/enums/enums';
 
-@Entity()
+@Entity() //  Marca la clase como una entidad (tabla en la base de datos)
 export class User {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn() //  Columna auto incremental (PRIMARY KEY)
   id: number;
 
-  @Column({ unique: true, length: 150 })
-  email: string;
+  @Column({ unique: true, length: 150, nullable: false }) //  Columna normal con restricciones (única, longitud máxima, obligatoria)
+  email: string; // email del usuario y user de ingreso a la aplicación
 
-  @Column({ select: false })
+  @Column({ select: false, nullable: false }) //  'select: false' evita que se devuelva en consultas
   password: string;
 
   @Column({ length: 100 })
-  firstName: string;
+  firstName: string; // nombre del usuario
 
   @Column({ length: 100 })
-  lastName: string;
+  lastName: string; // apellido del usuario
 
-  @Column({ nullable: true, length: 20 }) 
-  phone?: string;
+  @Column({ unique: true, length: 20, nullable: false })
+  phone: string; // Teléfono obligatorio y único
 
-  @Column({ nullable: true, length: 100 })
-  address?: string;
+  @Column({ unique: true, length: 20, nullable: false })
+  dni: string; // Documento de identidad obligatorio y único
 
-  @Column({ nullable: true, length: 100 })
-  city?: string;
+  @Column({ nullable: true, length: 100 }) //  Campo opcional
+  address?: string; // dirección
 
-  @Column({ nullable: true, length: 10 })
-  postalCode?: string;
+  @Column({ nullable: true, length: 100 }) //  Campo opcional
+  city?: string; // ciudad
 
-  @Column({ nullable: true, length: 100 })
-  country?: string;
+  @Column({ nullable: true, length: 10 }) //  Campo opcional
+  postalCode?: string; // código postal
 
-  @Column({ default: true })
-  isActive: boolean;
+  @Column({ nullable: true, length: 100 }) //  Campo opcional
+  country?: string; // país
 
-  @Column({ default: 'user' })
-  role: string;
+  @Column({ default: true }) //  Valor por defecto: true
+  isActive: boolean; // indica si el usuario está activo o no
 
-  @CreateDateColumn()
-  createdAt: Date;
+  @Column({ type: 'enum', enum: Role, default: Role.USER, nullable: false }) //  Enum: solo acepta los valores definidos en Role
+  role: Role; // rol del usuario (admin, user, etc.)
 
-  @UpdateDateColumn()
-  updatedAt: Date;
+  @CreateDateColumn() //  Se llena automáticamente al crear el registro
+  createdAt: Date; // fecha de creación
+
+  @UpdateDateColumn() //  Se actualiza automáticamente al modificar el registro
+  updatedAt: Date; // fecha de última modificación
+
+  @DeleteDateColumn() //  Se llena automáticamente al hacer un soft delete (borrado lógico)
+  deletedAt?: Date; // fecha de eliminación (soft delete)
 }
