@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
-import { Role } from 'src/common/enums/enums';
+import { RolesEnum } from 'src/common/enums/enums';
 
 @Entity() //  Marca la clase como una entidad (tabla en la base de datos)
 export class User {
@@ -39,8 +39,8 @@ export class User {
   @Column({ default: true }) //  Valor por defecto: true
   isActive: boolean; // indica si el usuario está activo o no
 
-  @Column({ type: 'enum', enum: Role, default: Role.USER, nullable: false }) //  Enum: solo acepta los valores definidos en Role
-  role: Role; // rol del usuario (admin, user, etc.)
+  @Column({ type: 'enum', enum: RolesEnum, default: RolesEnum.USER, nullable: false }) //  Enum: solo acepta los valores definidos en RolesEnum
+  role: RolesEnum; // rol del usuario (admin, user, etc.)
 
   @CreateDateColumn() //  Se llena automáticamente al crear el registro
   createdAt: Date; // fecha de creación

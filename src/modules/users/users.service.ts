@@ -1,10 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common'; // Injectable marca la clase como inyectable. NotFoundException para manejar 404.
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common'; // Injectable marca la clase como inyectable. NotFoundException para manejar 404. ConflictException para manejar duplicados
 import { CreateUserDto } from './dto/create-user.dto'; // DTO de creación de usuario
 import { UpdateUserDto } from './dto/update-user.dto'; // DTO de actualización de usuario
 import { InjectRepository } from '@nestjs/typeorm'; // Inyecta repositorio TypeORM
 import { Repository } from 'typeorm'; // Repository para acceder a la DB
 import { User } from './entities/user.entity'; // Entidad User
-import { Role } from 'src/common/enums/enums'; // Enum de roles
+import { RolesEnum } from 'src/common/enums/enums'; // Enum de roles
 
 @Injectable() // Marca la clase como inyectable por NestJS
 export class UsersService {
@@ -16,6 +16,20 @@ export class UsersService {
   // Crear usuario (uso interno, sin hashing ni validaciones de registro)
   // para uso de ADMIN 
   async create(createUserDto: CreateUserDto): Promise<User> {
+    // Validar duplicados: email, phone, dni
+    const existingUser = await this.userRepository.findOne({
+      where: [
+        { email: createUserDto.email },
+        { phone: createUserDto.phone },
+        { dni: createUserDto.dni },
+      ],
+    });
+    if (existingUser) {
+      throw new ConflictException(
+        'Email, teléfono o DNI ya existe en otro usuario', // mensaje de conflicto
+      );
+    }
+
     const user = this.userRepository.create(createUserDto); // Crea instancia de User pero no guarda
     return this.userRepository.save(user); // Guarda en DB y retorna entidad completa
   }
@@ -50,13 +64,30 @@ export class UsersService {
   }
 
   // Obtener usuarios por rol
-  async findByRole(role: Role): Promise<User[]> {
+  async findByRole(role: RolesEnum): Promise<User[]> {
     return this.userRepository.find({ where: { role } }); // Busca por rol
   }
 
   // Actualizar usuario
   async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
     const user = await this.findOne(id); // Asegura que exista
+
+    // Validar que email, phone o dni no colisionen con otros usuarios
+    if (updateUserDto.email || updateUserDto.phone || updateUserDto.dni) {
+      const conflictingUser = await this.userRepository.findOne({
+        where: [
+          { email: updateUserDto.email },
+          { phone: updateUserDto.phone },
+          { dni: updateUserDto.dni },
+        ],
+      });
+      if (conflictingUser && conflictingUser.id !== id) {
+        throw new ConflictException(
+          'Email, teléfono o DNI ya existe en otro usuario', // mensaje de conflicto
+        );
+      }
+    }
+
     return this.userRepository.save({ ...user, ...updateUserDto }); // Actualiza y guarda el usuario
   }
 
