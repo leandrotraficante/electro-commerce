@@ -19,10 +19,10 @@ export class User {
   lastName: string; // apellido del usuario
 
   @Column({ unique: true, length: 20, nullable: false })
-  phone: string; // Teléfono obligatorio y único
+  phone: string; // Teléfono con formato internacional, ej: "+54 9 11 1234 5678"
 
-  @Column({ unique: true, length: 20, nullable: false })
-  dni: string; // Documento de identidad obligatorio y único
+  @Column({ type: 'bigint', unique: true, nullable: false })
+  dni: number; // Documento de identidad, 7-12 dígitos obligatorio y único
 
   @Column({ nullable: true, length: 100 }) //  Campo opcional
   address?: string; // dirección

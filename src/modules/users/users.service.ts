@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm'; // Inyecta repositorio TypeO
 import { Repository } from 'typeorm'; // Repository para acceder a la DB
 import { User } from './entities/user.entity'; // Entidad User
 import { RolesEnum } from 'src/common/enums/enums'; // Enum de roles
+import { hashPassword } from 'src/common/helpers/hash';
 
 @Injectable() // Marca la clase como inyectable por NestJS
 export class UsersService {
@@ -29,6 +30,9 @@ export class UsersService {
         'Email, teléfono o DNI ya existe en otro usuario', // mensaje de conflicto
       );
     }
+
+    const hashedPassword = await hashPassword(createUserDto.password);
+    createUserDto.password = hashedPassword;
 
     const user = this.userRepository.create(createUserDto); // Crea instancia de User pero no guarda
     return this.userRepository.save(user); // Guarda en DB y retorna entidad completa

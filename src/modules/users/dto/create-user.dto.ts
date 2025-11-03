@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString, IsOptional, Length, Matches } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, IsOptional, Length, Matches, IsNumber, Min, Max } from 'class-validator';
 
 export class CreateUserDto {
 
@@ -22,15 +22,16 @@ export class CreateUserDto {
     @IsNotEmpty() // Obligatorio
     lastName: string;
 
-    @IsString() // Debe ser string
-    @IsNotEmpty({ message: 'El teléfono es obligatorio' }) // Obligatorio
-    @Matches(/^\+?[\d\s\-().]{10,20}$/, { message: 'Teléfono inválido' }) // Formato flexible con +, espacios, guiones y paréntesis
+    @IsString({ message: 'Debe ingresar un teléfono válido' })
+    @IsNotEmpty({ message: 'El teléfono es obligatorio' })
+    @Matches(/^\+?\d[\d\s\-()]{7,19}$/, { message: 'Teléfono inválido' })
     phone: string;
     
-    @IsString() // Debe ser string
-    @IsNotEmpty({ message: 'El DNI es obligatorio' }) // Obligatorio
-    @Matches(/^\d{7,12}$/, { message: 'El DNI debe contener entre 7 y 12 números' }) // Solo números, longitud 7–12
-    dni: string;
+    @IsNumber({}, { message: 'Debe ingresar un DNI válido' })
+    @IsNotEmpty({ message: 'El DNI es obligatorio' })
+    @Min(1000000, { message: 'El DNI debe tener al menos 7 dígitos' })
+    @Max(999999999999, { message: 'El DNI debe tener como máximo 12 dígitos' })
+    dni: number;
     
     @IsString() // Debe ser string
     @IsOptional() // Opcional
