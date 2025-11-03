@@ -32,9 +32,9 @@ export class UsersService {
     }
 
     const hashedPassword = await hashPassword(createUserDto.password);
-    createUserDto.password = hashedPassword;
+    const newUser = { ...createUserDto, password: hashedPassword };
 
-    const user = this.userRepository.create(createUserDto); // Crea instancia de User pero no guarda
+    const user = this.userRepository.create(newUser); // Crea instancia de User pero no guarda
     return this.userRepository.save(user); // Guarda en DB y retorna entidad completa
   }
 
