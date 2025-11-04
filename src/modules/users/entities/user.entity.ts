@@ -12,10 +12,10 @@ export class User {
   @Column({ select: false, nullable: false }) //  'select: false' evita que se devuelva en consultas
   password: string;
 
-  @Column({ length: 100 })
+  @Column({ length: 100, nullable: false })
   firstName: string; // nombre del usuario
 
-  @Column({ length: 100 })
+  @Column({ length: 100, nullable: false })
   lastName: string; // apellido del usuario
 
   @Column({ unique: true, length: 20, nullable: false })
