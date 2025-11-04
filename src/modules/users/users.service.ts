@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, ConflictException } from '@nestjs/common
 import { CreateUserDto } from './dto/create-user.dto'; // DTO de creación de usuario
 import { UpdateUserDto } from './dto/update-user.dto'; // DTO de actualización de usuario
 import { InjectRepository } from '@nestjs/typeorm'; // Inyecta repositorio TypeORM
-import { Repository } from 'typeorm'; // Repository para acceder a la DB
+import { Repository, FindOptionsWhere } from 'typeorm'; // Repository para acceder a la DB. FindOptionsWhere para tipar condiciones where
 import { User } from './entities/user.entity'; // Entidad User
 import { RolesEnum } from 'src/common/enums/enums'; // Enum de roles
 import { hashPassword } from 'src/common/helpers/hash';
@@ -76,15 +76,33 @@ export class UsersService {
   async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
     const user = await this.findOne(id); // Asegura que exista
 
-    // Validar que email, phone o dni no colisionen con otros usuarios
-    if (updateUserDto.email || updateUserDto.phone || updateUserDto.dni) {
+    // Construir array de condiciones where solo con campos que realmente vienen en el DTO
+    // FindOptionsWhere<User>[] = tipo de TypeORM para condiciones where de la entidad User
+    const whereConditions: FindOptionsWhere<User>[] = []; // Array vacío tipado explícitamente (evita never[])
+
+    // Agregar condición de email solo si viene en el DTO
+    if (updateUserDto.email) {
+      whereConditions.push({ email: updateUserDto.email }); // Agrega { email: 'valor' } al array
+    }
+
+    // Agregar condición de phone solo si viene en el DTO
+    if (updateUserDto.phone) {
+      whereConditions.push({ phone: updateUserDto.phone }); // Agrega { phone: 'valor' } al array
+    }
+
+    // Agregar condición de dni solo si viene en el DTO
+    if (updateUserDto.dni) {
+      whereConditions.push({ dni: updateUserDto.dni }); // Agrega { dni: valor } al array
+    }
+
+    // Solo buscar conflictos si hay campos únicos en el DTO (evita búsqueda innecesaria)
+    if (whereConditions.length > 0) {
+      // Buscar usuario que tenga alguno de esos campos únicos
       const conflictingUser = await this.userRepository.findOne({
-        where: [
-          { email: updateUserDto.email },
-          { phone: updateUserDto.phone },
-          { dni: updateUserDto.dni },
-        ],
+        where: whereConditions, // Array de condiciones: [{ email: '...' }, { phone: '...' }, etc.]
       });
+
+      // Si existe conflicto y NO es el mismo usuario que estamos actualizando
       if (conflictingUser && conflictingUser.id !== id) {
         throw new ConflictException(
           'Email, teléfono o DNI ya existe en otro usuario', // mensaje de conflicto
@@ -92,7 +110,11 @@ export class UsersService {
       }
     }
 
-    return this.userRepository.save({ ...user, ...updateUserDto }); // Actualiza y guarda el usuario
+    // Aplicar actualizaciones: copia propiedades del DTO al usuario existente
+    // Object.assign() actualiza solo los campos presentes en updateUserDto, mantiene los demás
+    Object.assign(user, updateUserDto);
+    
+    return this.userRepository.save(user); // Guarda el usuario actualizado en la DB
   }
 
   // Soft delete (borrado lógico, mantiene registro en DB)
