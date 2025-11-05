@@ -32,6 +32,7 @@ export class UsersService {
     }
 
     const hashedPassword = await hashPassword(createUserDto.password);
+    // newUser: combina CreateUserDto con password hasheado (tipo implícito, TypeORM acepta Partial<User>)
     const newUser = { ...createUserDto, password: hashedPassword };
 
     const user = this.userRepository.create(newUser); // Crea instancia de User pero no guarda

@@ -3,9 +3,10 @@ import { UsersService } from './users.service'; // Servicio que vamos a testear
 import { getRepositoryToken } from '@nestjs/typeorm'; // Genera el token correcto para mockear repositorios de TypeORM
 import { User } from './entities/user.entity'; // Entidad User (necesaria para el token)
 import { Repository } from 'typeorm'; // Tipo del Repository (para tipado)
-import { ConflictException } from '@nestjs/common'; // Excepción que esperamos cuando hay duplicados
+import { ConflictException, NotFoundException } from '@nestjs/common'; // Excepción que esperamos cuando hay duplicados
 import { hashPassword } from 'src/common/helpers/hash'; // Función helper que necesitamos mockear
 import { CreateUserDto } from './dto/create-user.dto'; // DTO para tipado de la factory
+import { UpdateUserDto } from './dto/update-user.dto'; // DTO para tipado de la factory
 
 // Mock a nivel módulo: intercepta la función importada antes de que se use --> hashPassword es una función importada, no una dependencia inyectada
 jest.mock('src/common/helpers/hash', () => ({
@@ -37,7 +38,12 @@ describe('UsersService', () => {
 
   // Mock del repository: versión falsa que no toca la DB real
   // Cada método es una función mock (jest.fn()) que podemos controlar en cada test
-  const mockRepository = {
+  // Definimos el tipo manualmente para que TypeScript entienda que son jest.Mock
+  const mockRepository: {
+    findOne: jest.Mock;
+    create: jest.Mock;
+    save: jest.Mock;
+  } = {
     findOne: jest.fn(), // Mock de búsqueda: mockResolvedValue(null) = no encuentra nada
     create: jest.fn(),  // Mock de creación: generalmente devuelve el mismo objeto
     save: jest.fn(),    // Mock de guardado: mockResolvedValue({ id: 1, ...user }) = simula que guardó
@@ -82,8 +88,10 @@ describe('UsersService', () => {
 
       // Configurar mocks del repository para simular el flujo exitoso
       mockRepository.findOne.mockResolvedValue(null); // No encuentra duplicados (null = no existe)
-      mockRepository.create.mockImplementation(dto => dto); // create() solo devuelve el mismo objeto
-      mockRepository.save.mockImplementation(user => Promise.resolve({ id: 1, ...user })); // save() simula que guardó y agregó id
+      // create() recibe el DTO y devuelve el mismo objeto (TypeORM behavior)
+      mockRepository.create.mockImplementation((dto: CreateUserDto) => dto);
+      // save() recibe un usuario y simula que guardó agregando el id
+      mockRepository.save.mockImplementation((user: Partial<User>) => Promise.resolve({ id: 1, ...user } as User));
 
       const createUserDto = createUserDtoFactory(); // Crear DTO de prueba usando la factory
 
@@ -120,7 +128,7 @@ describe('UsersService', () => {
 
       // Configurar mocks del repository
       mockRepository.findOne.mockResolvedValue(null); // No hay duplicados
-      mockRepository.create.mockImplementation(dto => dto);
+      mockRepository.create.mockImplementation((dto: CreateUserDto) => dto);
       mockRepository.save.mockResolvedValue({
         id: 1,
         ...createUserDtoFactory(), // DTO base
@@ -158,7 +166,7 @@ describe('UsersService', () => {
       // Configurar mocks
       (hashPassword as jest.Mock).mockResolvedValue(hashedPassword);
       mockRepository.findOne.mockResolvedValue(null); // No hay duplicados (pasa la validación)
-      mockRepository.create.mockImplementation(dto => dto);
+      mockRepository.create.mockImplementation((dto: CreateUserDto) => dto);
       mockRepository.save.mockRejectedValue(dbError); // DB falla al intentar guardar
 
       const createUserDto = createUserDtoFactory();
@@ -166,9 +174,162 @@ describe('UsersService', () => {
       // ACT & ASSERT: Verificar que el error se propaga correctamente
       // El error de DB debe propagarse (no debe ser manejado internamente)
       await expect(service.create(createUserDto)).rejects.toThrow('Database connection failed');
-      
+
       // Verificar que se intentó guardar (llegó hasta el punto de guardar)
       expect(mockRepository.save).toHaveBeenCalled();
     });
+  });
+
+  describe('update()', () => {
+    // Test 1: Caso exitoso - el flujo normal cuando todo funciona bien
+    it('should update a user successfully', async () => {
+      // ARRANGE: Preparar mocks para simular el flujo exitoso
+      const id = 1;
+      // existingUser: mock de User completo (en tests no necesitamos todos los campos de User, solo los que usamos)
+      const existingUser: Partial<User> = { id, ...createUserDtoFactory() };
+
+      // datos a actualizar
+      const updateUserDto: Partial<UpdateUserDto> = {
+        email: 'newemail@test.com',
+        firstName: 'Charles'
+      };
+
+      // Primera llamada: findOne(id) internamente llama repository.findOne({ where: { id } })
+      // Segunda llamada: busca conflictos por email
+      mockRepository.findOne
+        .mockResolvedValueOnce(existingUser) // Primera: encuentra el usuario por id
+        .mockResolvedValueOnce(null); // Segunda: no hay conflictos (email nuevo no existe)
+
+      // Simular el save del usuario actualizado
+      const updatedUser = { ...existingUser, ...updateUserDto };
+      mockRepository.save.mockResolvedValue(updatedUser);
+
+      // ACT: Ejecutar el método
+      const result = await service.update(id, updateUserDto);
+
+      // ASSERT: Verificar las llamadas internas
+      expect(mockRepository.findOne).toHaveBeenCalledTimes(2);
+      // Primera llamada: busca por id (dentro de this.findOne(id))
+      expect(mockRepository.findOne).toHaveBeenNthCalledWith(1, { where: { id } });
+      // Segunda llamada: busca conflictos por email
+      expect(mockRepository.findOne).toHaveBeenNthCalledWith(2, {
+        where: [{ email: updateUserDto.email }]
+      });
+
+      // Verificar que save recibió el usuario actualizado
+      expect(mockRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id,
+          email: updateUserDto.email,
+          firstName: updateUserDto.firstName
+        })
+      );
+
+      // ASSERT: verificar resultado final
+      expect(result.email).toBe(updateUserDto.email);
+      expect(result.firstName).toBe(updateUserDto.firstName);
+      expect(result.id).toBe(id);
+
+      // ASSERT: Verificar que hashPassword NO fue llamado (update no debe hashear passwords)
+      expect(hashPassword).not.toHaveBeenCalled();
+    });
+
+    // Test 2: Usuario no encontrado - cuando el id no existe en la base de datos
+    it('should throw NotFoundException if user not found', async () => {
+      // ARRANGE
+      const id = 1;
+      mockRepository.findOne.mockResolvedValueOnce(null); // No encuentra el usuario
+
+      const updateUserDto: Partial<UpdateUserDto> = {
+        email: 'newemail@test.com',
+        firstName: 'Charles',
+      };
+
+      // ACT & ASSERT
+      await expect(service.update(id, updateUserDto)).rejects.toThrow(NotFoundException);
+
+      // Verificar comportamiento interno
+      expect(mockRepository.findOne).toHaveBeenCalledTimes(1);
+      expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { id } });
+      expect(mockRepository.save).not.toHaveBeenCalled();
+    });
+
+    // Test 3: Conflicto de email/phone/dni; ya existe en otro user
+    it('should throw ConflictException if email/phone/dni already exist', async () => {
+      // ARRANGE
+      const id = 1;
+      const existingUser: Partial<User> = { id, ...createUserDtoFactory() };
+
+      // datos a actualizar
+      const updateUserDto: Partial<UpdateUserDto> = {
+        email: 'duplicated-email@test.com',
+        firstName: 'Charles',
+      };
+
+      // usuario simulado en conflicto con email duplicado
+      const conflictUser: Partial<User> = { id: 2, ...createUserDtoFactory(), email: 'duplicated-email@test.com' };
+
+      // llamadas al repository
+      mockRepository.findOne
+        .mockResolvedValueOnce(existingUser)
+        .mockResolvedValueOnce(conflictUser);
+
+      // ACT & ASSERT: Verificar que se lance la excepción correcta
+      await expect(service.update(id, updateUserDto)).rejects.toThrow(ConflictException);
+
+      // Verificar comportamiento interno
+      expect(mockRepository.findOne).toHaveBeenCalledTimes(2);
+      expect(mockRepository.findOne).toHaveBeenNthCalledWith(1, { where: { id } });
+      expect(mockRepository.findOne).toHaveBeenNthCalledWith(2, { where: [{ email: updateUserDto.email }] });
+      expect(mockRepository.save).not.toHaveBeenCalled();
+    });
+
+    // Test 4: Actualización sin campos únicos - cuando solo se actualizan campos no únicos (firstName, lastName, etc.)
+    // En este caso, NO debe buscar conflictos (solo 1 llamada a findOne: buscar el usuario por id)
+    it('should update user successfully when only non-unique fields are updated', async () => {
+      // ARRANGE: Preparar mocks para simular actualización solo de campos no únicos
+      const id = 1;
+      const existingUser: Partial<User> = { id, ...createUserDtoFactory() };
+
+      // datos a actualizar: solo campos no únicos (firstName, lastName, etc.)
+      const updateUserDto: Partial<UpdateUserDto> = {
+        firstName: 'Charles',
+        lastName: 'Darwin',
+        address: 'Nueva dirección'
+      };
+
+      // Solo una llamada: buscar el usuario por id (NO debe buscar conflictos porque no hay campos únicos)
+      mockRepository.findOne.mockResolvedValueOnce(existingUser); // Encuentra el usuario por id
+
+      // Simular el save del usuario actualizado
+      const updatedUser = { ...existingUser, ...updateUserDto };
+      mockRepository.save.mockResolvedValue(updatedUser);
+
+      // ACT: Ejecutar el método
+      const result = await service.update(id, updateUserDto);
+
+      // ASSERT: Verificar que findOne se llamó SOLO 1 vez (no busca conflictos)
+      expect(mockRepository.findOne).toHaveBeenCalledTimes(1);
+      expect(mockRepository.findOne).toHaveBeenNthCalledWith(1, { where: { id } });
+
+      // Verificar que save recibió el usuario actualizado
+      expect(mockRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id,
+          firstName: updateUserDto.firstName,
+          lastName: updateUserDto.lastName,
+          address: updateUserDto.address
+        })
+      );
+
+      // ASSERT: verificar resultado final
+      expect(result.firstName).toBe(updateUserDto.firstName);
+      expect(result.lastName).toBe(updateUserDto.lastName);
+      expect(result.address).toBe(updateUserDto.address);
+      expect(result.id).toBe(id);
+
+      // ASSERT: Verificar que hashPassword NO fue llamado (update no debe hashear passwords)
+      expect(hashPassword).not.toHaveBeenCalled();
+    })
   });
 });
