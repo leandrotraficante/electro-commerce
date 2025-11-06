@@ -16,6 +16,9 @@ export class UsersService {
 
   // Crear usuario (uso interno, sin hashing ni validaciones de registro)
   // para uso de ADMIN 
+  // IMPORTANTE: El role siempre será USER por defecto (definido en la entidad)
+  // El admin NO puede crear otros admins, solo usuarios normales
+  // Solo el dueño de la app puede crear admins (endpoint separado o lógica especial)
   async create(createUserDto: CreateUserDto): Promise<User> {
     // Validar duplicados: email, phone, dni
     const existingUser = await this.userRepository.findOne({
@@ -32,30 +35,52 @@ export class UsersService {
     }
 
     const hashedPassword = await hashPassword(createUserDto.password);
-    // newUser: combina CreateUserDto con password hasheado (tipo implícito, TypeORM acepta Partial<User>)
+    // newUser: combina CreateUserDto con password hasheado (NO incluye role, TypeORM usará el default: RolesEnum.USER)
     const newUser = { ...createUserDto, password: hashedPassword };
 
-    const user = this.userRepository.create(newUser); // Crea instancia de User pero no guarda
+    const user = this.userRepository.create(newUser); // Crea instancia de User pero no guarda (role se asigna automáticamente como USER por default)
     return this.userRepository.save(user); // Guarda en DB y retorna entidad completa
   }
 
-  // Obtener todos los usuarios
-  async findAll(): Promise<User[]> {
-    return this.userRepository.find(); // Devuelve todos los usuarios
+  // Obtener todos los usuarios con paginación
+  async findAll(page: number = 1, limit: number = 10): Promise<{ users: User[]; total: number; page: number; limit: number }> {
+    const skip = (page - 1) * limit; // Calcula cuántos registros saltar
+    const [users, total] = await this.userRepository.findAndCount({
+      skip, // Registros a saltar
+      take: limit, // Cantidad de registros a tomar
+    });
+    return {
+      users, // Array de usuarios
+      total, // Total de usuarios en la base de datos
+      page, // Página actual
+      limit, // Límite de registros por página
+    };
   }
 
   // Obtener usuario por id
   async findOne(id: number): Promise<User> {
     const user = await this.userRepository.findOne({ where: { id } }); // Busca usuario por id
-    if (!user) throw new NotFoundException('User not found'); // Lanza excepción si no existe
+    if (!user) throw new NotFoundException('Usuario no encontrado'); // Lanza excepción si no existe
     return user;
   }
 
   // Obtener usuario por email
   async findByEmail(email: string): Promise<User> {
     const user = await this.userRepository.findOne({ where: { email } }); // Busca por email
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) throw new NotFoundException('Usuario no encontrado');
     return user;
+  }
+
+  // Obtener usuario por email incluyendo password (solo para autenticación - uso interno)
+  // Usa addSelect para incluir el campo password que tiene select: false
+  // Retorna null si no existe (para manejo en auth, no lanza excepción)
+  async findByEmailWithPassword(email: string): Promise<User | null> {
+    const user = await this.userRepository
+      .createQueryBuilder('user')
+      .addSelect('user.password') // Incluye el campo password que normalmente está excluido
+      .where('user.email = :email', { email })
+      .getOne();
+    return user || null; // Retorna null en lugar de lanzar excepción (para manejo en auth)
   }
 
   // Obtener usuarios activos
@@ -132,8 +157,4 @@ export class UsersService {
     return this.userRepository.save(user); // Guarda cambios en DB
   }
 
-  // Borrado físico (solo si se quiere eliminar de verdad)
-  async remove(id: number): Promise<void> {
-    await this.userRepository.delete(id); // Borra registro de la DB
-  }
 }

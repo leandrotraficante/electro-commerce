@@ -15,11 +15,13 @@ export class CreateUserDto {
     password: string;
     
     @IsString() // Debe ser string
-    @IsNotEmpty() // Obligatorio
+    @IsNotEmpty({ message: 'El nombre es obligatorio' }) // Obligatorio
+    @Length(1, 100, { message: 'El nombre debe tener entre 1 y 100 caracteres' }) // Longitud mínima y máxima
     firstName: string;
 
     @IsString() // Debe ser string
-    @IsNotEmpty() // Obligatorio
+    @IsNotEmpty({ message: 'El apellido es obligatorio' }) // Obligatorio
+    @Length(1, 100, { message: 'El apellido debe tener entre 1 y 100 caracteres' }) // Longitud mínima y máxima
     lastName: string;
 
     @IsString({ message: 'Debe ingresar un teléfono válido' })
@@ -35,17 +37,21 @@ export class CreateUserDto {
     
     @IsString() // Debe ser string
     @IsOptional() // Opcional
+    @Length(1, 100, { message: 'La dirección debe tener entre 1 y 100 caracteres' }) // Longitud máxima
     address?: string;
 
     @IsString() // Debe ser string
     @IsOptional() // Opcional
+    @Length(1, 100, { message: 'La ciudad debe tener entre 1 y 100 caracteres' }) // Longitud máxima
     city?: string;
 
     @IsString() // Debe ser string
     @IsOptional() // Opcional
+    @Length(1, 10, { message: 'El código postal debe tener entre 1 y 10 caracteres' }) // Longitud máxima
     postalCode?: string;
 
     @IsString() // Debe ser string
     @IsOptional() // Opcional
+    @Length(1, 100, { message: 'El país debe tener entre 1 y 100 caracteres' }) // Longitud máxima
     country?: string;
 }
