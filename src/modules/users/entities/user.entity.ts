@@ -24,6 +24,9 @@ export class User {
   @Column({ type: 'bigint', unique: true, nullable: false })
   dni: number; // Documento de identidad, 7-12 dígitos obligatorio y único
 
+  @Column({ type: 'date', nullable: true })
+  birthDate: Date; // fecha de nacimiento del usuario
+
   @Column({ nullable: true, length: 100 }) //  Campo opcional
   address?: string; // dirección
 

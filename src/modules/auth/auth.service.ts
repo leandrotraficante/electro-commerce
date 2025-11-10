@@ -6,6 +6,7 @@ import { User } from '../users/entities/user.entity'; // Entidad User para tipad
 import { CreateUserDto } from '../users/dto/create-user.dto'; // DTO para creación de usuario
 import { LoginDto } from './dto/login.dto'; // DTO para login (solo email y password)
 import { UserResponseDto, toUserResponseDto } from '../users/dto/user-response.dto'; // DTO de respuesta y helper para excluir password
+import { JwtPayload } from 'src/common/types/jwt-payload.interface';
 
 @Injectable() // Marca la clase como inyectable por NestJS
 export class AuthService {
@@ -79,7 +80,7 @@ export class AuthService {
   async generateToken(user: User): Promise<string> {
     // Crear payload con datos del usuario (id, email, role)
     // sub (subject) es el estándar JWT para el ID del usuario
-    const payload = {
+    const payload: JwtPayload = {
       sub: user.id, // ID del usuario
       email: user.email, // Email del usuario
       role: user.role, // Rol del usuario

@@ -5,18 +5,18 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, HttpStatus, UseGuard
 import { UsersService } from './users.service'; // se importa el servicio de usuarios para usar sus metodos 
 import { CreateUserDto } from './dto/create-user.dto'; // se importa el dto de creacion para validaciones de datos de entrada
 import { UpdateUserDto } from './dto/update-user.dto'; // se importa el dto de actualizacion para validaciones de datos de entrada
+import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/common/guards/roles.guard'; // se importa el guard de roles para validar los roles de los usuarios
 import { Roles } from 'src/common/decorators/role.decorator'; // se importa el decorador de roles para validar los roles de los usuarios
 import { RolesEnum } from 'src/common/enums/enums'; // se importa el enum de roles para validar los roles de los usuarios
 import { AllExceptionsFilter } from 'src/common/filters/http-exception.filter'; // se importa el filtro de excepciones para manejar los errores de manera correcta
-import { User } from './entities/user.entity'; // se importa la entidad User para tipado
-import { ApiResponse, ApiListResponse, ApiMessageResponse, ApiPaginatedResponse } from 'src/common/types/api-response.types'; // se importan los tipos compartidos para respuestas de la API
+import { ApiResponse, ApiMessageResponse, ApiPaginatedResponse } from 'src/common/types/api-response.types'; // se importan los tipos compartidos para respuestas de la API
 import { UserResponseDto, toUserResponseDto } from './dto/user-response.dto'; // se importa el DTO de respuesta que excluye password y la función helper
 
 @Controller('users') // se define el controlador de usuarios y se le asigna la ruta /users
 @UseFilters(AllExceptionsFilter) // se usa el filtro de excepciones para manejar los errores de manera correcta
 @Roles(RolesEnum.ADMIN) // valida que todos los métodos de este controlador requieran rol ADMIN
-@UseGuards(RolesGuard)   // aplica el guard de roles a todo el controlador
+@UseGuards(AuthGuard('jwt'), RolesGuard)   // aplica primero autenticación JWT y luego validación de roles a todo el controlador
 export class UsersController { // se define la clase UsersController que implementa el controlador de usuarios 
   constructor(private readonly usersService: UsersService) { } // se inyecta el servicio de usuarios para usar sus metodos 
 

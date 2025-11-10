@@ -7,7 +7,7 @@ import {
     HttpException, // Clase para excepciones HTTP de Nest (BadRequest, NotFound, etc.)
     HttpStatus, // Enum con códigos HTTP (200, 404, 500...)
   } from '@nestjs/common';
-  import { Response } from 'express'; // Tipo para la response de Express
+  import { Request, Response } from 'express'; // Tipos para Request / Response de Express
 
   // Interfaces para tipado explícito (evita uso de any)
   interface ErrorResponse {

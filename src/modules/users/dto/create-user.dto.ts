@@ -1,4 +1,5 @@
-import { IsEmail, IsNotEmpty, IsString, IsOptional, Length, Matches, IsNumber, Min, Max } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, IsOptional, Length, Matches, IsNumber, Min, Max, IsDateString } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateUserDto {
 
@@ -34,6 +35,11 @@ export class CreateUserDto {
     @Min(1000000, { message: 'El DNI debe tener al menos 7 dígitos' })
     @Max(999999999999, { message: 'El DNI debe tener como máximo 12 dígitos' })
     dni: number;
+
+    @Type(() => Date)
+    @IsDateString({}, { message: 'Debe ingresar una fecha de nacimiento válida' })
+    @IsOptional() // Opcional
+    birthDate?: Date;
     
     @IsString() // Debe ser string
     @IsOptional() // Opcional

@@ -9,7 +9,10 @@ export class RolesGuard implements CanActivate { // El guard debe implementar Ca
 
   canActivate(context: ExecutionContext): boolean { // Método obligatorio de CanActivate
     // Obtener los roles requeridos definidos en el decorador Roles del endpoint
-    const requiredRoles = this.reflector.get<RolesEnum[]>('roles', context.getHandler()); 
+    const requiredRoles = this.reflector.getAllAndOverride<RolesEnum[]>('roles', [
+      context.getHandler(),
+      context.getClass(),
+    ]);
     // 'roles' es la key que usamos en SetMetadata
     if (!requiredRoles) {
       // Si no hay roles requeridos, dejamos pasar la request

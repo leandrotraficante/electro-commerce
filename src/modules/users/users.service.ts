@@ -35,10 +35,10 @@ export class UsersService {
     }
 
     const hashedPassword = await hashPassword(createUserDto.password);
-    // newUser: combina CreateUserDto con password hasheado (NO incluye role, TypeORM usará el default: RolesEnum.USER)
-    const newUser = { ...createUserDto, password: hashedPassword };
-
-    const user = this.userRepository.create(newUser); // Crea instancia de User pero no guarda (role se asigna automáticamente como USER por default)
+    const user = this.userRepository.create({
+      ...createUserDto,
+      password: hashedPassword,
+    }); // Crea instancia de User pero no guarda (role se asigna automáticamente como USER por default)
     return this.userRepository.save(user); // Guarda en DB y retorna entidad completa
   }
 

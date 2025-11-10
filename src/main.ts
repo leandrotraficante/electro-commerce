@@ -19,7 +19,7 @@ async function bootstrap() {
   app.use(helmet());
   app.use(cors({ origin: '*' }));
   app.useGlobalFilters(new AllExceptionsFilter());
-  app.useGlobalPipes(new ValidationPipe({
+  app.useGlobalPipes(new ValidationPipe({ // en vez de usar ValidationPipes en cada DTO, lo manejamos aca de maera global
     whitelist: true, // elimina propiedades no definidas en los DTOs
     forbidNonWhitelisted: true, // lanza error si vienen campos extra
     transform: true, // transforma los datos a los tipos definidos en los DTOs
