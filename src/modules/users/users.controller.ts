@@ -47,16 +47,6 @@ export class UsersController { // se define la clase UsersController que impleme
     }
   }
 
-  @Get(':id') // GET /users/:id
-  async findOne(@Param('id', ParseIntPipe) id: number): Promise<ApiResponse<UserResponseDto>> { // se parsea el id a número
-    const userById = await this.usersService.findOne(id); // NotFoundException ya se lanza en el service si no existe
-    return {
-      statusCode: HttpStatus.OK, // status code 200
-      message: 'Usuario obtenido exitosamente', // mensaje de exito
-      data: toUserResponseDto(userById), // usuario encontrado sin password
-    }
-  }
-  
   @Patch(':id') // PATCH /users/:id
   async update(@Param('id', ParseIntPipe) id: number, @Body() updateUserDto: UpdateUserDto): Promise<ApiResponse<UserResponseDto>> {
     const updatedUser = await this.usersService.update(id, updateUserDto); // NotFoundException ya se lanza en el service si no existe
@@ -141,6 +131,16 @@ export class UsersController { // se define la clase UsersController que impleme
       total: users.length, // total de usuarios con ese rol
       page: page || 1, // página actual
       limit: limit || 10, // límite de registros por página
+    }
+  }
+
+  @Get(':id') // GET /users/:id
+  async findOne(@Param('id', ParseIntPipe) id: number): Promise<ApiResponse<UserResponseDto>> { // se parsea el id a número
+    const userById = await this.usersService.findOne(id); // NotFoundException ya se lanza en el service si no existe
+    return {
+      statusCode: HttpStatus.OK, // status code 200
+      message: 'Usuario obtenido exitosamente', // mensaje de exito
+      data: toUserResponseDto(userById), // usuario encontrado sin password
     }
   }
 

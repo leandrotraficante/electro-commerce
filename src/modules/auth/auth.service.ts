@@ -75,7 +75,7 @@ export class AuthService {
     return { message: 'Sesión cerrada exitosamente' };
   }
 
-    // Generar token JWT
+  // Generar token JWT
   // Crea un token JWT con el payload del usuario (id, email, role)
   async generateToken(user: User): Promise<string> {
     // Crear payload con datos del usuario (id, email, role)
@@ -95,19 +95,19 @@ export class AuthService {
   }
 
   // Refresh token (opcional)
-  // Genera un nuevo token para un usuario existente sin requerir login
-  async refreshToken(userId: number): Promise<{ accessToken: string }> {
-    // Buscar usuario por ID - NotFoundException ya se lanza en usersService.findOne() si no existe
-    const user = await this.usersService.findOne(userId);
-    
+  // Genera un nuevo token para el usuario autenticado, evitando ids arbitrarios
+  async refreshToken(authenticatedUser: User): Promise<{ accessToken: string }> {
+    // Revalida el usuario consultando por su propio ID (sub extraído del JWT)
+    const user = await this.usersService.findOne(authenticatedUser.id);
+
     // Verificar que el usuario esté activo
     if (!user.isActive) {
       throw new UnauthorizedException('Usuario inactivo');
     }
-    
+
     // Generar nuevo token usando generateToken()
     const token = await this.generateToken(user);
-    
+
     // Retornar el nuevo token
     return { accessToken: token };
   }

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common'; // Injectable marca la clase como inyectable. NotFoundException para manejar 404. ConflictException para manejar duplicados
+import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common'; // Injectable marca la clase como inyectable. NotFoundException para manejar 404. ConflictException para manejar duplicados
 import { CreateUserDto } from './dto/create-user.dto'; // DTO de creación de usuario
 import { UpdateUserDto } from './dto/update-user.dto'; // DTO de actualización de usuario
 import { InjectRepository } from '@nestjs/typeorm'; // Inyecta repositorio TypeORM
@@ -102,38 +102,17 @@ export class UsersService {
   async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
     const user = await this.findOne(id); // Asegura que exista
 
-    // Construir array de condiciones where solo con campos que realmente vienen en el DTO
-    // FindOptionsWhere<User>[] = tipo de TypeORM para condiciones where de la entidad User
-    const whereConditions: FindOptionsWhere<User>[] = []; // Array vacío tipado explícitamente (evita never[])
+    // Campos que no se permiten modificar desde este endpoint
+    const forbiddenFields: Array<keyof User> = ['email', 'phone', 'dni', 'birthDate', 'password'];
+    const payload = updateUserDto as Record<string, unknown>;
+    const forbiddenProvided = forbiddenFields.filter((field) =>
+      Object.prototype.hasOwnProperty.call(payload, field) && payload[field] !== undefined,
+    );
 
-    // Agregar condición de email solo si viene en el DTO
-    if (updateUserDto.email) {
-      whereConditions.push({ email: updateUserDto.email }); // Agrega { email: 'valor' } al array
-    }
-
-    // Agregar condición de phone solo si viene en el DTO
-    if (updateUserDto.phone) {
-      whereConditions.push({ phone: updateUserDto.phone }); // Agrega { phone: 'valor' } al array
-    }
-
-    // Agregar condición de dni solo si viene en el DTO
-    if (updateUserDto.dni) {
-      whereConditions.push({ dni: updateUserDto.dni }); // Agrega { dni: valor } al array
-    }
-
-    // Solo buscar conflictos si hay campos únicos en el DTO (evita búsqueda innecesaria)
-    if (whereConditions.length > 0) {
-      // Buscar usuario que tenga alguno de esos campos únicos
-      const conflictingUser = await this.userRepository.findOne({
-        where: whereConditions, // Array de condiciones: [{ email: '...' }, { phone: '...' }, etc.]
-      });
-
-      // Si existe conflicto y NO es el mismo usuario que estamos actualizando
-      if (conflictingUser && conflictingUser.id !== id) {
-        throw new ConflictException(
-          'Email, teléfono o DNI ya existe en otro usuario', // mensaje de conflicto
-        );
-      }
+    if (forbiddenProvided.length > 0) {
+      throw new BadRequestException(
+        `No está permitido actualizar los campos: ${forbiddenProvided.join(', ')}`,
+      );
     }
 
     // Aplicar actualizaciones: copia propiedades del DTO al usuario existente

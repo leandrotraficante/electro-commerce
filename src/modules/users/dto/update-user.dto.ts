@@ -2,15 +2,15 @@ import { PartialType, OmitType } from '@nestjs/mapped-types';
 import { CreateUserDto } from './create-user.dto';
 
 export class UpdateUserDto extends PartialType(
-  OmitType(CreateUserDto, ['password'] as const)
+  OmitType(CreateUserDto, ['password', 'email', 'phone', 'dni', 'birthDate'] as const)
 ) { 
 
 /* Cómo funciona internamente:
 
 Hereda todos los campos de CreateUserDto EXCEPTO password (usando OmitType).
 Convierte todos los campos en opcionales (?) con PartialType.
-Mantiene las validaciones (IsEmail, Length, etc.) de CreateUserDto, pero ahora los campos opcionales no disparan errores si no se envían.
-El password está excluido porque se manejará en un método separado para cambio de contraseña (mejores prácticas de seguridad).
+Mantiene las validaciones (Length, etc.) de CreateUserDto sobre los campos permitidos.
+Se excluyen password, email, phone, dni y birthDate: esos datos sensibles necesitan endpoints y lógica específica.
 
 
 Llamamos al endpoint PATCH /users/:id con un JSON:

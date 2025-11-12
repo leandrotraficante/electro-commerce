@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString, IsOptional, Length, Matches, IsNumber, Min, Max, IsDateString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, IsOptional, Length, Matches, IsNumber, Min, Max, IsDate } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateUserDto {
@@ -37,7 +37,7 @@ export class CreateUserDto {
     dni: number;
 
     @Type(() => Date)
-    @IsDateString({}, { message: 'Debe ingresar una fecha de nacimiento válida' })
+    @IsDate({ message: 'Debe ingresar una fecha de nacimiento válida' })
     @IsOptional() // Opcional
     birthDate?: Date;
     

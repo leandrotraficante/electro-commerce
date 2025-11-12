@@ -8,12 +8,16 @@ import { OrdersModule } from './modules/orders/orders.module';
 import { CartModule } from './modules/cart/cart.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { PaymentsModule } from './modules/payments/payments.module';
+import { envConfig } from './config/env.config';
 
 
 @Module({
   imports: [
     ConfigModule.forRoot({
     isGlobal: true,
+    cache: true,
+    expandVariables: true,
+    load: [envConfig],
   }),
   TypeOrmModule.forRoot({
     type: 'postgres',
