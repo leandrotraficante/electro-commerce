@@ -1,8 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, OneToMany } from 'typeorm';
 import { RolesEnum } from 'src/common/enums/enums';
+import { Product } from 'src/modules/products/entities/product.entity';
+import { BaseEntity } from 'src/common/entities/base.entity';
 
 @Entity() //  Marca la clase como una entidad (tabla en la base de datos)
-export class User {
+export class User extends BaseEntity {
   @PrimaryGeneratedColumn() //  Columna auto incremental (PRIMARY KEY)
   id: number;
 
@@ -45,12 +47,6 @@ export class User {
   @Column({ type: 'enum', enum: RolesEnum, default: RolesEnum.USER, nullable: false }) //  Enum: solo acepta los valores definidos en RolesEnum
   role: RolesEnum; // rol del usuario (admin, user, etc.)
 
-  @CreateDateColumn() //  Se llena automáticamente al crear el registro
-  createdAt: Date; // fecha de creación
-
-  @UpdateDateColumn() //  Se actualiza automáticamente al modificar el registro
-  updatedAt: Date; // fecha de última modificación
-
-  @DeleteDateColumn() //  Se llena automáticamente al hacer un soft delete (borrado lógico)
-  deletedAt?: Date; // fecha de eliminación (soft delete)
+  @OneToMany(() => Product, (product) => product.category)
+  products: Product[];
 }

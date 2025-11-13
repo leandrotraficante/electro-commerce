@@ -9,6 +9,7 @@ import { CartModule } from './modules/cart/cart.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { envConfig } from './config/env.config';
+import { CategoriesModule } from './modules/categories/categories.module';
 
 
 @Module({
@@ -33,6 +34,7 @@ import { envConfig } from './config/env.config';
   CartModule,
   ChatModule,
   PaymentsModule,
+  CategoriesModule,
 ],
 
 })
