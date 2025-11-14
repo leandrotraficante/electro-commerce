@@ -30,6 +30,7 @@ export class CreateUserDto {
     @Matches(/^\+?\d[\d\s\-()]{7,19}$/, { message: 'Teléfono inválido' })
     phone: string;
     
+    @Type(() => Number)
     @IsNumber({}, { message: 'Debe ingresar un DNI válido' })
     @IsNotEmpty({ message: 'El DNI es obligatorio' })
     @Min(1000000, { message: 'El DNI debe tener al menos 7 dígitos' })

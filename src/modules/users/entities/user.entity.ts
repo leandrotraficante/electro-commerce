@@ -1,10 +1,10 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, OneToMany } from 'typeorm';
 import { RolesEnum } from 'src/common/enums/enums';
 import { Product } from 'src/modules/products/entities/product.entity';
-import { BaseEntity } from 'src/common/entities/base.entity';
+import { BaseAuditEntity } from 'src/common/entities/base.audit.entity';
 
 @Entity() //  Marca la clase como una entidad (tabla en la base de datos)
-export class User extends BaseEntity {
+export class User extends BaseAuditEntity {
   @PrimaryGeneratedColumn() //  Columna auto incremental (PRIMARY KEY)
   id: number;
 
@@ -47,6 +47,6 @@ export class User extends BaseEntity {
   @Column({ type: 'enum', enum: RolesEnum, default: RolesEnum.USER, nullable: false }) //  Enum: solo acepta los valores definidos en RolesEnum
   role: RolesEnum; // rol del usuario (admin, user, etc.)
 
-  @OneToMany(() => Product, (product) => product.category)
+  @OneToMany(() => Product, (product) => product.createdBy)
   products: Product[];
 }

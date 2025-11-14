@@ -1,7 +1,6 @@
-import { Entity, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from "typeorm";
+import { CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from "typeorm";
 
-@Entity()
-export abstract class BaseEntity {
+export abstract class BaseAuditEntity {
     @CreateDateColumn()
     createdAt: Date;
 
@@ -10,5 +9,4 @@ export abstract class BaseEntity {
 
     @DeleteDateColumn({ nullable: true })
     deletedAt?: Date;
-
 }

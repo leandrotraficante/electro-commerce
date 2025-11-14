@@ -1,9 +1,9 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { Product } from 'src/modules/products/entities/product.entity';
-import { BaseEntity } from 'src/common/entities/base.entity';
+import { BaseAuditEntity } from 'src/common/entities/base.audit.entity';
 
 @Entity()
-export class Category extends BaseEntity {
+export class Category extends BaseAuditEntity {
     @PrimaryGeneratedColumn()
     id: number;
 

@@ -1,10 +1,10 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from "typeorm";
 import { User } from "src/modules/users/entities/user.entity";
 import { Category } from "src/modules/categories/entities/category.entity";
-import { BaseEntity } from "src/common/entities/base.entity";
+import { BaseAuditEntity } from "src/common/entities/base.audit.entity";
 
 @Entity()
-export class Product extends BaseEntity {
+export class Product extends BaseAuditEntity {
     @PrimaryGeneratedColumn()
     id: number;
 

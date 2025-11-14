@@ -13,7 +13,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private readonly usersService: UsersService, // Inyecta UsersService para recuperar el usuario del token
     private readonly configService: ConfigService, // Inyecta ConfigService para leer la configuración centralizada
   ) {
-    const secret = configService.get<string>('env.jwt.secret'); // Obtiene el secreto JWT validado por ConfigModule
+    const secret = configService.get<string>('jwt.secret'); // Obtiene el secreto JWT validado por ConfigModule
 
     if (!secret) { // Si por alguna razón el secreto no existe, detenemos la app inmediatamente
       throw new Error('JWT_SECRET no está configurado.'); // Mensaje claro para detectar la falta de configuración

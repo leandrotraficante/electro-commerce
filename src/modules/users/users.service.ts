@@ -42,19 +42,25 @@ export class UsersService {
     return this.userRepository.save(user); // Guarda en DB y retorna entidad completa
   }
 
+  private buildPagination(page = 1, limit = 10): { page: number; limit: number; skip: number } {
+    const safePage = Number.isFinite(page) && page > 0 ? Math.trunc(page) : 1;
+    const safeLimit = Number.isFinite(limit) && limit > 0 ? Math.trunc(limit) : 10;
+    const skip = (safePage - 1) * safeLimit;
+    return { page: safePage, limit: safeLimit, skip };
+  }
+
+  private buildPaginatedResponse(users: User[], total: number, page: number, limit: number) {
+    return { users, total, page, limit };
+  }
+
   // Obtener todos los usuarios con paginación
   async findAll(page: number = 1, limit: number = 10): Promise<{ users: User[]; total: number; page: number; limit: number }> {
-    const skip = (page - 1) * limit; // Calcula cuántos registros saltar
+    const { page: safePage, limit: safeLimit, skip } = this.buildPagination(page, limit);
     const [users, total] = await this.userRepository.findAndCount({
       skip, // Registros a saltar
-      take: limit, // Cantidad de registros a tomar
+      take: safeLimit, // Cantidad de registros a tomar
     });
-    return {
-      users, // Array de usuarios
-      total, // Total de usuarios en la base de datos
-      page, // Página actual
-      limit, // Límite de registros por página
-    };
+    return this.buildPaginatedResponse(users, total, safePage, safeLimit);
   }
 
   // Obtener usuario por id
@@ -84,18 +90,36 @@ export class UsersService {
   }
 
   // Obtener usuarios activos
-  async findActive(): Promise<User[]> {
-    return this.userRepository.find({ where: { isActive: true } }); // Solo activos
+  async findActive(page: number = 1, limit: number = 10): Promise<{ users: User[]; total: number; page: number; limit: number }> {
+    const { page: safePage, limit: safeLimit, skip } = this.buildPagination(page, limit);
+    const [users, total] = await this.userRepository.findAndCount({
+      where: { isActive: true },
+      skip,
+      take: safeLimit,
+    });
+    return this.buildPaginatedResponse(users, total, safePage, safeLimit);
   }
 
   // Obtener usuarios inactivos
-  async findInactive(): Promise<User[]> {
-    return this.userRepository.find({ where: { isActive: false } }); // Solo inactivos
+  async findInactive(page: number = 1, limit: number = 10): Promise<{ users: User[]; total: number; page: number; limit: number }> {
+    const { page: safePage, limit: safeLimit, skip } = this.buildPagination(page, limit);
+    const [users, total] = await this.userRepository.findAndCount({
+      where: { isActive: false },
+      skip,
+      take: safeLimit,
+    });
+    return this.buildPaginatedResponse(users, total, safePage, safeLimit);
   }
 
   // Obtener usuarios por rol
-  async findByRole(role: RolesEnum): Promise<User[]> {
-    return this.userRepository.find({ where: { role } }); // Busca por rol
+  async findByRole(role: RolesEnum, page: number = 1, limit: number = 10): Promise<{ users: User[]; total: number; page: number; limit: number }> {
+    const { page: safePage, limit: safeLimit, skip } = this.buildPagination(page, limit);
+    const [users, total] = await this.userRepository.findAndCount({
+      where: { role },
+      skip,
+      take: safeLimit,
+    });
+    return this.buildPaginatedResponse(users, total, safePage, safeLimit);
   }
 
   // Actualizar usuario

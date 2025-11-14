@@ -15,8 +15,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       imports: [ConfigModule],             // Permite usar ConfigService dentro del factory
       inject: [ConfigService],             // Inyecta ConfigService en la función
       useFactory: (configService: ConfigService) => {
-        const secret = configService.get<string>('env.jwt.secret');      // Lee el secreto validado
-        const expiresIn = configService.get<number>('env.jwt.expiresIn'); // Lee la expiración validada
+        const secret = configService.get<string>('jwt.secret');      // Lee el secreto validado
+        const expiresIn = configService.get<number>('jwt.expiresIn'); // Lee la expiración validada
 
         return {
           secret,                           // Devuelve el secreto al JwtModule

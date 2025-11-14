@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module'; 
@@ -9,6 +9,7 @@ import { CartModule } from './modules/cart/cart.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { envConfig } from './config/env.config';
+import { jwtConfig } from './config/jwt.config';
 import { CategoriesModule } from './modules/categories/categories.module';
 
 
@@ -18,14 +19,18 @@ import { CategoriesModule } from './modules/categories/categories.module';
     isGlobal: true,
     cache: true,
     expandVariables: true,
-    load: [envConfig],
+    load: [envConfig, jwtConfig],
   }),
-  TypeOrmModule.forRoot({
-    type: 'postgres',
-    url: process.env.DATABASE_URL,
-    autoLoadEntities: true,
-    synchronize: true,
-    logging: true,
+  TypeOrmModule.forRootAsync({
+    imports: [ConfigModule],
+    inject: [ConfigService],
+    useFactory: (configService: ConfigService) => ({
+      type: 'postgres',
+      url: configService.get<string>('env.database.url'),
+      autoLoadEntities: true,
+      synchronize: true,
+      logging: true,
+    }),
   }),
   UsersModule,
   AuthModule,

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpStatus, UseGuards, UseFilters, ParseIntPipe, Query } from '@nestjs/common'; 
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpStatus, UseGuards, UseFilters, ParseIntPipe, Query, ParseEnumPipe } from '@nestjs/common'; 
 // en nestJS se importan 
 // lo que vendrian a ser las rutas en nodejs (GET, POST, PUT, DELETE, etc.), tambien se importan de manera nativa los http status y exceptions 
 // para manejar los errores de manera correcta.
@@ -36,7 +36,7 @@ export class UsersController { // se define la clase UsersController que impleme
     @Query('page', new ParseIntPipe({ optional: true })) page?: number, // Query param opcional para página (default: 1)
     @Query('limit', new ParseIntPipe({ optional: true })) limit?: number, // Query param opcional para límite (default: 10)
   ): Promise<ApiPaginatedResponse<UserResponseDto>> {
-    const result = await this.usersService.findAll(page || 1, limit || 10); // se obtiene la lista paginada de usuarios desde el service
+    const result = await this.usersService.findAll(page ?? 1, limit ?? 10); // se obtiene la lista paginada de usuarios desde el service
     return {
       statusCode: HttpStatus.OK, // status code 200
       message: 'Usuarios obtenidos exitosamente', // mensaje de exito
@@ -81,17 +81,14 @@ export class UsersController { // se define la clase UsersController que impleme
     @Query('page', new ParseIntPipe({ optional: true })) page?: number, // Query param opcional para página
     @Query('limit', new ParseIntPipe({ optional: true })) limit?: number, // Query param opcional para límite
   ): Promise<ApiPaginatedResponse<UserResponseDto>> {
-    const users = await this.usersService.findActive(); // se obtienen solo usuarios activos
-    const startIndex = ((page || 1) - 1) * (limit || 10); // calcula índice de inicio para paginación manual
-    const endIndex = startIndex + (limit || 10); // calcula índice de fin
-    const paginatedUsers = users.slice(startIndex, endIndex); // aplica paginación manual
+    const result = await this.usersService.findActive(page ?? 1, limit ?? 10); // se obtienen solo usuarios activos
     return {
       statusCode: HttpStatus.OK, // status code 200
       message: 'Usuarios activos obtenidos exitosamente', // mensaje de exito
-      data: paginatedUsers.map(toUserResponseDto), // usuarios activos sin password
-      total: users.length, // total de usuarios activos
-      page: page || 1, // página actual
-      limit: limit || 10, // límite de registros por página
+      data: result.users.map(toUserResponseDto), // usuarios activos sin password
+      total: result.total, // total de usuarios activos
+      page: result.page, // página actual
+      limit: result.limit, // límite de registros por página
     }
   }
 
@@ -100,37 +97,31 @@ export class UsersController { // se define la clase UsersController que impleme
     @Query('page', new ParseIntPipe({ optional: true })) page?: number, // Query param opcional para página
     @Query('limit', new ParseIntPipe({ optional: true })) limit?: number, // Query param opcional para límite
   ): Promise<ApiPaginatedResponse<UserResponseDto>> {
-    const users = await this.usersService.findInactive(); // se obtienen solo usuarios inactivos
-    const startIndex = ((page || 1) - 1) * (limit || 10); // calcula índice de inicio para paginación manual
-    const endIndex = startIndex + (limit || 10); // calcula índice de fin
-    const paginatedUsers = users.slice(startIndex, endIndex); // aplica paginación manual
+    const result = await this.usersService.findInactive(page ?? 1, limit ?? 10); // se obtienen solo usuarios inactivos
     return {
       statusCode: HttpStatus.OK, // status code 200
       message: 'Usuarios inactivos obtenidos exitosamente', // mensaje de exito
-      data: paginatedUsers.map(toUserResponseDto), // usuarios inactivos sin password
-      total: users.length, // total de usuarios inactivos
-      page: page || 1, // página actual
-      limit: limit || 10, // límite de registros por página
+      data: result.users.map(toUserResponseDto), // usuarios inactivos sin password
+      total: result.total, // total de usuarios inactivos
+      page: result.page, // página actual
+      limit: result.limit, // límite de registros por página
     }
   }
 
   @Get('role/:role') // GET /users/role/:role - obtener usuarios por rol
   async findByRole(
-    @Param('role') role: RolesEnum, // se parsea el rol del enum
+    @Param('role', new ParseEnumPipe(RolesEnum)) role: RolesEnum, // se parsea el rol del enum
     @Query('page', new ParseIntPipe({ optional: true })) page?: number, // Query param opcional para página
     @Query('limit', new ParseIntPipe({ optional: true })) limit?: number, // Query param opcional para límite
   ): Promise<ApiPaginatedResponse<UserResponseDto>> {
-    const users = await this.usersService.findByRole(role); // se obtienen usuarios por rol
-    const startIndex = ((page || 1) - 1) * (limit || 10); // calcula índice de inicio para paginación manual
-    const endIndex = startIndex + (limit || 10); // calcula índice de fin
-    const paginatedUsers = users.slice(startIndex, endIndex); // aplica paginación manual
+    const result = await this.usersService.findByRole(role, page ?? 1, limit ?? 10); // se obtienen usuarios por rol
     return {
       statusCode: HttpStatus.OK, // status code 200
       message: 'Usuarios obtenidos exitosamente', // mensaje de exito
-      data: paginatedUsers.map(toUserResponseDto), // usuarios por rol sin password
-      total: users.length, // total de usuarios con ese rol
-      page: page || 1, // página actual
-      limit: limit || 10, // límite de registros por página
+      data: result.users.map(toUserResponseDto), // usuarios por rol sin password
+      total: result.total, // total de usuarios con ese rol
+      page: result.page, // página actual
+      limit: result.limit, // límite de registros por página
     }
   }
 
