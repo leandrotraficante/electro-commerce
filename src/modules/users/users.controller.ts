@@ -36,7 +36,7 @@ export class UsersController { // se define la clase UsersController que impleme
     @Query('page', new ParseIntPipe({ optional: true })) page?: number, // Query param opcional para página (default: 1)
     @Query('limit', new ParseIntPipe({ optional: true })) limit?: number, // Query param opcional para límite (default: 10)
   ): Promise<ApiPaginatedResponse<UserResponseDto>> {
-    const result = await this.usersService.findAll(page ?? 1, limit ?? 10); // se obtiene la lista paginada de usuarios desde el service
+    const result = await this.usersService.findAll(page, limit); // se obtiene la lista paginada de usuarios desde el service (valores por defecto manejados en el service)
     return {
       statusCode: HttpStatus.OK, // status code 200
       message: 'Usuarios obtenidos exitosamente', // mensaje de exito
@@ -81,7 +81,7 @@ export class UsersController { // se define la clase UsersController que impleme
     @Query('page', new ParseIntPipe({ optional: true })) page?: number, // Query param opcional para página
     @Query('limit', new ParseIntPipe({ optional: true })) limit?: number, // Query param opcional para límite
   ): Promise<ApiPaginatedResponse<UserResponseDto>> {
-    const result = await this.usersService.findActive(page ?? 1, limit ?? 10); // se obtienen solo usuarios activos
+    const result = await this.usersService.findActive(page, limit); // se obtienen solo usuarios activos (valores por defecto manejados en el service)
     return {
       statusCode: HttpStatus.OK, // status code 200
       message: 'Usuarios activos obtenidos exitosamente', // mensaje de exito
@@ -97,7 +97,7 @@ export class UsersController { // se define la clase UsersController que impleme
     @Query('page', new ParseIntPipe({ optional: true })) page?: number, // Query param opcional para página
     @Query('limit', new ParseIntPipe({ optional: true })) limit?: number, // Query param opcional para límite
   ): Promise<ApiPaginatedResponse<UserResponseDto>> {
-    const result = await this.usersService.findInactive(page ?? 1, limit ?? 10); // se obtienen solo usuarios inactivos
+    const result = await this.usersService.findInactive(page, limit); // se obtienen solo usuarios inactivos (valores por defecto manejados en el service)
     return {
       statusCode: HttpStatus.OK, // status code 200
       message: 'Usuarios inactivos obtenidos exitosamente', // mensaje de exito
@@ -114,7 +114,7 @@ export class UsersController { // se define la clase UsersController que impleme
     @Query('page', new ParseIntPipe({ optional: true })) page?: number, // Query param opcional para página
     @Query('limit', new ParseIntPipe({ optional: true })) limit?: number, // Query param opcional para límite
   ): Promise<ApiPaginatedResponse<UserResponseDto>> {
-    const result = await this.usersService.findByRole(role, page ?? 1, limit ?? 10); // se obtienen usuarios por rol
+    const result = await this.usersService.findByRole(role, page, limit); // se obtienen usuarios por rol (valores por defecto manejados en el service)
     return {
       statusCode: HttpStatus.OK, // status code 200
       message: 'Usuarios obtenidos exitosamente', // mensaje de exito

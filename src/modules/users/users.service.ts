@@ -126,8 +126,13 @@ export class UsersService {
   async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
     const user = await this.findOne(id); // Asegura que exista
 
+    // Validar que el usuario esté activo antes de actualizar
+    if (!user.isActive) {
+      throw new BadRequestException('No se puede actualizar un usuario inactivo. Primero debe restaurarlo.');
+    }
+
     // Campos que no se permiten modificar desde este endpoint
-    const forbiddenFields: Array<keyof User> = ['email', 'phone', 'dni', 'birthDate', 'password'];
+    const forbiddenFields: Array<keyof User> = ['email', 'phone', 'dni', 'birthDate', 'password', 'role', 'isActive'];
     const payload = updateUserDto as Record<string, unknown>;
     const forbiddenProvided = forbiddenFields.filter((field) =>
       Object.prototype.hasOwnProperty.call(payload, field) && payload[field] !== undefined,
